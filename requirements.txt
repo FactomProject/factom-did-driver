@@ -1,0 +1,3 @@
+bottle
+harmony-connect-client
+python-identitykeys
