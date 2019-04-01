@@ -1,12 +1,15 @@
 import bottle
 import consts
-import datetime
 import factomd_jsonrpc_parser
 import harmony_connect_parser
 import json
-from bottle import error, get, hook, post, put, request, route, run
+from bottle import error, get, hook, request, run
+from config import DriverConfig
 from harmony_connect_client.rest import ApiException
 from validation import IdentityNotFoundException
+
+
+driver_config = DriverConfig()
 
 
 @hook('before_request')
@@ -20,23 +23,67 @@ def health_check():
     return {'data': 'Healthy!'}
 
 
-@get('/1.0/identifiers/did\:factom\:<identity_chain_id>')
-def resolve(identity_chain_id):
+@get('/1.0/identifiers/did\:factom\:<chain_id:re:[0-9A-Fa-f]{64}>')
+def resolve(chain_id):
+    metadata, active_keys = None, None
     try:
-        # TODO:
-        # identity, active_keys = factomd_jsonrpc_parser.get_keys(identity_chain_id)
-        identity, active_keys = harmony_connect_parser.get_keys(identity_chain_id)
+        if driver_config.factom_connection == DriverConfig.FACTOMD:
+            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+        elif driver_config.factom_connection == DriverConfig.HARMONY:
+            metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
+        else:
+            bottle.abort(500)  # Invalid connection type. This should never be executed.
     except IdentityNotFoundException:
         bottle.abort(404)
     except ApiException:
         bottle.abort(500)  # Failed to make API call for some reason
 
-    did = consts.DID_PREFIX + identity_chain_id
+    return construct_resolution_result(chain_id, active_keys, metadata)
+
+
+@get('/1.0/identifiers/did\:factom\:mainnet\:<chain_id:re:[0-9A-Fa-f]{64}>')
+def resolve_mainnet(chain_id):
+    metadata, active_keys = None, None
+    try:
+        if driver_config.factom_connection == DriverConfig.FACTOMD:
+            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+        elif driver_config.factom_connection == DriverConfig.HARMONY:
+            metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
+        else:
+            bottle.abort(500)  # Invalid connection type. This should never be executed.
+    except IdentityNotFoundException:
+        bottle.abort(404)
+    except ApiException:
+        bottle.abort(500)  # Failed to make API call for some reason
+
+    return construct_resolution_result(chain_id, active_keys, metadata, network_identifier=consts.NETWORK_MAINNET)
+
+
+@get('/1.0/identifiers/did\:factom\:testnet\:<chain_id:re:[0-9A-Fa-f]{64}>')
+def resolve_testnet(chain_id):
+    metadata, active_keys = None, None
+    try:
+        if driver_config.factom_connection == DriverConfig.FACTOMD:
+            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id, testnet=True)
+        elif driver_config.factom_connection == DriverConfig.HARMONY:
+            bottle.abort(422)  # Connection type does not support testnet
+        else:
+            bottle.abort(50)  # Invalid connection type. This should never be executed.
+    except IdentityNotFoundException:
+        bottle.abort(404)
+    except ApiException:
+        bottle.abort(500)  # Failed to make API call for some reason
+
+    return construct_resolution_result(chain_id, active_keys, metadata, network_identifier=consts.NETWORK_TESTNET)
+
+
+def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict, network_identifier=''):
+    did = '{}{}{}'.format(consts.DID_PREFIX, network_identifier, chain_id)
     key_count = len(active_keys)
     public_keys = [None] * key_count
     for i, key in enumerate(active_keys.values()):
         key['id'] = '{}#key-{}'.format(did, i)
-        key['type'] = consts.DID_PUBLIC_KEY_TYPE
+        key['type'] = consts.PUBLIC_KEY_TYPE
         public_keys[key['priority']] = key
         del key['priority']
 
@@ -46,12 +93,11 @@ def resolve(identity_chain_id):
         'service': [],
         'publicKey': public_keys,
         'authentication': {
-            'type': consts.DID_AUTHENTICATION_TYPE,
+            'type': consts.AUTHENTICATION_TYPE,
             'publicKey': '{}#key-{}'.format(did, key_count - 1)
         }
     }
-
-    return {'didDocument': did_document, 'methodMetadata': identity }
+    return {'didDocument': did_document, 'methodMetadata': metadata}
 
 
 @error(400)
@@ -72,12 +118,19 @@ def error405(error):
     return json.dumps(body, separators=(',', ':'))
 
 
+@error(422)
+def error422(error):
+    body = {'errors': {'detail': 'Unprocessable entity'}}
+    return json.dumps(body, separators=(',', ':'))
+
+
 @error(500)
 def error500(error):
     body = {'errors': {'detail': 'Internal server error'}}
     return json.dumps(body, separators=(',', ':'))
 
 
+# Entry point ONLY when run locally. The docker setup uses gunicorn and this block will not be executed.
 if __name__ == '__main__':
     run(host='localhost', port=8080)
 

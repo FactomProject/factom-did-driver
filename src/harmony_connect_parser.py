@@ -3,23 +3,23 @@ import consts
 import harmony_connect_client as api
 import validation
 from collections import OrderedDict
+from config import DriverConfig
 from harmony_connect_client.rest import ApiException
 
-
-# TODO: take configuration from env vars
-api_config = api.Configuration()
-api_config.host = 'https://durable.api.factom.com/v1'
-api_config.api_key['app_id'] = ''
-api_config.api_key['app_key'] = ''
-entries_api = api.EntriesApi(api.ApiClient(api_config))
 
 IDENTITY_CHAIN_TAG_BASE64 = base64.b64encode(consts.IDENTITY_CHAIN_TAG).decode()
 KEY_REPLACEMENT_TAG_BASE64 = base64.b64encode(consts.KEY_REPLACEMENT_TAG).decode()
 
 
-def get_keys(chain_id):
-    active_keys = OrderedDict()
+def get_keys(driver_config: DriverConfig, chain_id: str):
+    active_keys = {}
     all_keys = OrderedDict()
+
+    api_config = api.Configuration()
+    api_config.host = driver_config.harmony_url
+    api_config.api_key['app_id'] = driver_config.harmony_app_id
+    api_config.api_key['app_key'] = driver_config.harmony_app_key
+    entries_api = api.EntriesApi(api.ApiClient(api_config))
 
     try:
         entry = entries_api.get_first_entry(chain_id).data
@@ -34,10 +34,10 @@ def get_keys(chain_id):
     content = base64.b64decode(entry.content)
     external_ids = [base64.b64decode(x.encode()) for x in entry.external_ids]
     if entry.stage == 'replicated':
-        identity = validation.process_identity_creation(active_keys, all_keys, entry.entry_hash, external_ids, content)
-        return identity, active_keys
+        metadata = validation.process_identity_creation(active_keys, all_keys, entry.entry_hash, external_ids, content)
+        return metadata, active_keys
 
-    identity = validation.process_identity_creation(
+    metadata = validation.process_identity_creation(
         active_keys, all_keys, entry.entry_hash,
         external_ids, content, entry.stage, entry.dblock.height, entry.created_at
     )
@@ -73,4 +73,4 @@ def get_keys(chain_id):
         offset += limit
         page += 1
 
-    return identity, active_keys
+    return metadata, active_keys

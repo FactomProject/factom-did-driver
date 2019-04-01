@@ -2,25 +2,28 @@ import consts
 import datetime
 import validation
 from collections import OrderedDict
+from config import DriverConfig
 from factom import Factomd
+from factom.exceptions import MissingChainHead
 
 
-# TODO: take configuration from env vars
-factomd = Factomd(host='http://localhost:8088')
-
-
-def get_keys(chain_id):
-    active_keys = OrderedDict()
+def get_keys(driver_config: DriverConfig, chain_id: str, testnet=False):
+    active_keys = {}
     all_keys = OrderedDict()
 
-    chain = factomd.read_chain(chain_id, include_entry_context=True)
+    rpc_url = driver_config.rpc_url_mainnet if not testnet else driver_config.rpc_url_testnet
+    factomd = Factomd(host=rpc_url)
+    try:
+        chain = factomd.read_chain(chain_id, include_entry_context=True)
+    except MissingChainHead:
+        raise validation.IdentityNotFoundException()
 
     entry = chain[-1]
     if len(entry['extids']) <= 1 or entry['extids'][0] != consts.IDENTITY_CHAIN_TAG:
         raise validation.IdentityNotFoundException()
 
     timestamp = unix_nano_to_iso8601(entry['timestamp'])
-    identity = validation.process_identity_creation(
+    metadata = validation.process_identity_creation(
         active_keys, all_keys, entry['entryhash'],
         entry['extids'], entry['content'], stage='factom', height=123, time=timestamp
     )
@@ -35,9 +38,8 @@ def get_keys(chain_id):
             active_keys, all_keys, chain_id, entry['entryhash'], entry['extids'], entry['dbheight'], timestamp
         )
 
-    return identity, active_keys
+    return metadata, active_keys
 
 
 def unix_nano_to_iso8601(timestamp):
-    dt = datetime.datetime.utcfromtimestamp(timestamp)
-    return dt.isoformat().replace("+00:00", "Z")
+    return datetime.datetime.utcfromtimestamp(timestamp).isoformat() + 'Z'

@@ -35,8 +35,8 @@ The driver recognizes the following environment variables:
 
 ### `uniresolver_driver_did_factom_factomConnection`
 
-* Specifies the type of connection used to interact with the Factom blockchain (`factomd` or `harmony_connect`)
-* Default value: `harmony_connect`
+* Specifies the type of connection used to interact with the Factom blockchain:`factomd` or `harmony`. (Note: the `harmony` connection type only supports resolution of mainnet DIDs at this time)
+* Default value: `factomd`
  
 ### `uniresolver_driver_did_factom_rpcUrlMainnet`
 
@@ -46,12 +46,22 @@ The driver recognizes the following environment variables:
 ### `uniresolver_driver_did_factom_rpcUrlTestnet`
 
 * Specifies the JSON-RPC URL of a factomd instance running on the community testnet
-* Default value: `http://localhost:8088`
+* Default value: `https://dev.factomd.net`
 
-### `uniresolver_driver_did_factom_harmonyConnectApi`
+### `uniresolver_driver_did_factom_harmonyApiUrl`
 
 * Specifies the URL of a Factom Harmony Connect API
 * Default value: `https://api.factom.com/v1`
+
+### `uniresolver_driver_did_factom_harmonyApiAppId`
+
+* Specifies the `app_id` to be sent in request headers to the Factom Harmony Connect API
+* Default value: ``
+
+### `uniresolver_driver_did_factom_harmonyApiAppKey`
+
+* Specifies the `app_key` to be sent in request headers to the Factom Harmony Connect API
+* Default value: ``
 
  
 ## Driver Metadata
