@@ -12,7 +12,7 @@ This is a [Universal Resolver](https://github.com/decentralized-identity/univers
 ## Example DIDs
 
 ```
-did:factom:
+did:factom:91e41255a4255f7034caaf11549d5b085be174ebb059462baa35d1e3dac88c15
 ```
 
 ## Build and Run (Docker)
@@ -20,7 +20,7 @@ did:factom:
 ```
 docker build -f ./docker/Dockerfile . -t universalresolver/driver-did-factom
 docker run -p 8080:8080 universalresolver/driver-did-factom
-curl -X GET http://localhost:8080/1.0/identifiers/did:factom:
+curl -X GET http://localhost:8080/1.0/identifiers/did:factom:91e41255a4255f7034caaf11549d5b085be174ebb059462baa35d1e3dac88c15
 ```
 
 ## Build and Run (python)
