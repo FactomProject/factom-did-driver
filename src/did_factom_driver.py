@@ -2,6 +2,7 @@ import bottle
 import consts
 import factomd_jsonrpc_parser
 import harmony_connect_parser
+import tfa_explorer_parser
 import json
 from bottle import error, get, hook, request, run
 from config import DriverConfig
@@ -29,6 +30,8 @@ def resolve(chain_id):
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
             metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+        elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
+            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
             metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
         else:
@@ -47,6 +50,8 @@ def resolve_mainnet(chain_id):
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
             metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+        elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
+            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
             metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
         else:
@@ -65,10 +70,12 @@ def resolve_testnet(chain_id):
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
             metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id, testnet=True)
+        elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
+            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id, testnet=True)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
             bottle.abort(422)  # Connection type does not support testnet
         else:
-            bottle.abort(50)  # Invalid connection type. This should never be executed.
+            bottle.abort(500)  # Invalid connection type. This should never be executed.
     except IdentityNotFoundException:
         bottle.abort(404)
     except ApiException:
