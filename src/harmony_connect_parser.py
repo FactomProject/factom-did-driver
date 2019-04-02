@@ -57,7 +57,7 @@ def get_keys(driver_config: DriverConfig, chain_id: str):
 
         for entry_description in all_entries_response.data:
             entry = entries_api.get_entry_by_hash(chain_id, entry_description.entry_hash).data
-            if entry.stage != 'replicated':
+            if entry.stage == 'replicated':
                 keep_parsing = False
                 break
 
