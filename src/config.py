@@ -16,7 +16,7 @@ class DriverConfig:
         self.rpc_url_testnet = os.getenv('uniresolver_driver_did_factom_rpcUrlTestnet', 'https://dev.factomd.net')
 
         # TFA's Explorer API
-        self.tfa_explorer_mainnet = os.getenv('uniresolver_driver_did_factom_tfaExplorerApiUrlMainet', 'https://explorer.factoid.org/api/v1')
+        self.tfa_explorer_mainnet = os.getenv('uniresolver_driver_did_factom_tfaExplorerApiUrlMainnet', 'https://explorer.factoid.org/api/v1')
         self.tfa_explorer_testnet = os.getenv('uniresolver_driver_did_factom_tfaExplorerApiUrlTestnet', 'https://testnet.factoid.org/api/v1')
 
         # Factom Inc's Harmony Connect
