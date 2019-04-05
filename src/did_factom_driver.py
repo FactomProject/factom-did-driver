@@ -92,7 +92,6 @@ def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict
         key['id'] = '{}#key-{}'.format(did, key['priority'])
         key['type'] = consts.PUBLIC_KEY_TYPE
         public_keys[key['priority']] = key
-        del key['priority']
 
     did_document = {
         '@context': consts.DID_CONTEXT,
@@ -101,38 +100,38 @@ def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict
         'publicKey': public_keys,
         'authentication': {
             'type': consts.AUTHENTICATION_TYPE,
-            'publicKey': '{}#key-{}'.format(did, key_count - 1)
+            'publicKey': ['{}#key-{}'.format(did, key_count - 1)]
         }
     }
     return {'didDocument': did_document, 'methodMetadata': metadata}
 
 
 @error(400)
-def error400(error):
+def error400(e):
     body = {'errors': {'detail': 'Bad request'}}
     return json.dumps(body, separators=(',', ':'))
 
 
 @error(404)
-def error404(error):
+def error404(e):
     body = {'errors': {'detail': 'Page not found'}}
     return json.dumps(body, separators=(',', ':'))
 
 
 @error(405)
-def error405(error):
+def error405(e):
     body = {'errors': {'detail': 'Method not allowed'}}
     return json.dumps(body, separators=(',', ':'))
 
 
 @error(422)
-def error422(error):
+def error422(e):
     body = {'errors': {'detail': 'Unprocessable entity'}}
     return json.dumps(body, separators=(',', ':'))
 
 
 @error(500)
-def error500(error):
+def error500(e):
     body = {'errors': {'detail': 'Internal server error'}}
     return json.dumps(body, separators=(',', ':'))
 

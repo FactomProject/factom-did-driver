@@ -38,6 +38,7 @@ def get_keys(driver_config: DriverConfig, chain_id: str, testnet=False):
             active_keys, all_keys, chain_id, entry['entryhash'], entry['extids'], entry['dbheight'], timestamp
         )
 
+    metadata['publicKeyHistory'] = list(all_keys.values())
     return metadata, active_keys
 
 

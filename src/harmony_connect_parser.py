@@ -73,4 +73,5 @@ def get_keys(driver_config: DriverConfig, chain_id: str):
         offset += limit
         page += 1
 
+    metadata['publicKeyHistory'] = list(all_keys.values())
     return metadata, active_keys

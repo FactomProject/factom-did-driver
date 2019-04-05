@@ -9,8 +9,8 @@ class IdentityNotFoundException(Exception):
 
 
 def process_identity_creation(
-        active_keys: OrderedDict, all_keys: OrderedDict, entry_hash: str,
-        external_ids: list, content: bytes, stage='pending', height=None, time=None
+    active_keys: OrderedDict, all_keys: OrderedDict, entry_hash: str,
+    external_ids: list, content: bytes, stage='pending', height=None, time=None
 ):
     if stage == 'pending':
         assert height is None and time is None, 'Stage "pending", height and time must be None'
@@ -24,30 +24,33 @@ def process_identity_creation(
     # - ExtID[0] == "IdentityChain"
     # - Content is a proper JSON object with 'version' and 'keys' elements
     # - All elements of the 'keys' array are valid public keys (idpub format)
-    initial_identity = json.loads(content.decode())
+    content_json = json.loads(content.decode())
 
-    if 'keys' not in initial_identity and 'version' not in initial_identity:
+    if content_json.get('version') == 1:
+        if not isinstance(content_json.get('keys'), list):
+            raise IdentityNotFoundException()
+
+        for i, key in enumerate(content_json['keys']):
+            if not is_valid_idpub(key):
+                raise IdentityNotFoundException()
+            elif key in active_keys:
+                continue
+            key_object = {
+                'publicKeyHex': PublicIdentityKey(key_string=key).to_bytes().hex(),
+                'activatedHeight': height,
+                'activatedTime': time,
+                'retiredHeight': None,
+                'retiredTime': None,
+                'priority': i,
+                'entryHash': entry_hash
+            }
+            active_keys[key] = key_object
+            all_keys[key] = key_object
+    else:
         raise IdentityNotFoundException()
 
-    for i, key in enumerate(initial_identity['keys']):
-        if not is_valid_idpub(key):
-            raise IdentityNotFoundException()
-        elif key in active_keys:
-            continue
-        key_object = {
-            'publicKeyString': key,
-            'publicKeyHex': PublicIdentityKey(key_string=key).to_bytes().hex(),
-            'activatedHeight': height,
-            'activatedTime': time,
-            'retiredHeight': None,
-            'retiredTime': None,
-            'priority': i,
-            'entryHash': entry_hash
-        }
-        active_keys[key] = key_object
-        all_keys[key] = key_object
-
     return {
+        'version': content_json.get('version'),
         'name': [x.decode() for x in external_ids[1:]],
         'createdHeight': height,
         'createdTime': time,
@@ -88,8 +91,9 @@ def process_key_replacement(active_keys, all_keys, chain_id, entry_hash, externa
         return
 
     # Key replacement is valid and finalized
+    all_keys[old_key]['retiredHeight'] = height
+    all_keys[old_key]['retiredTime'] = time
     new_key_object = {
-        'publicKeyString': new_key,
         'publicKeyHex': PublicIdentityKey(key_string=new_key).to_bytes().hex(),
         'activatedHeight': height,
         'activatedTime': time,

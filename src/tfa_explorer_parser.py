@@ -60,6 +60,7 @@ def get_keys(driver_config: DriverConfig, chain_id: str, testnet=False):
         offset += limit
         page += 1
 
+    metadata['publicKeyHistory'] = list(all_keys.values())
     return metadata, active_keys
 
 
@@ -83,5 +84,4 @@ def get_entries_in_chain(api_base_url: str, chain_id: str, limit=25, offset=0):
         raise ValueError
 
     result = resp.json().get('result')
-    if result is None:
-        return []
+    return [] if result is None else result
