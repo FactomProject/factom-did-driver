@@ -20,7 +20,7 @@ did:factom:91e41255a4255f7034caaf11549d5b085be174ebb059462baa35d1e3dac88c15
 ```
 docker build -f ./docker/Dockerfile . -t universalresolver/driver-did-factom
 docker run -p 8080:8080 universalresolver/driver-did-factom
-curl -X GET http://localhost:8080/1.0/identifiers/did:factom:91e41255a4255f7034caaf11549d5b085be174ebb059462baa35d1e3dac88c15
+curl -X GET http://localhost:8080/1.0/identifiers/did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758
 ```
 
 ## Build and Run (python)

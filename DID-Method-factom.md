@@ -186,6 +186,14 @@ This method has yet to be specified, however, it will likely take the form of a 
 # Security Considerations
 *TODO*
 
+# Recovery From Key Compromise
+Factom DID's have a hierarchical structure of public keys, where `#key-0` is the highest priority and `#key-n` the lowest. A key replacement can be authorized by any key at the same or higher priority. Such a scheme allows for an entity to store their keys in various levels of security. For example:
+- `#key-0` - in cold storage
+- `#key-1` - on an airgapped machine
+- `#key-2` - used in applications (a.k.a. the hot key)
+
+If the hot key is lost or compromised, the other two higher priority keys are able to authorize a replacement.
+
 # Privacy Considerations
 *TODO*
 
