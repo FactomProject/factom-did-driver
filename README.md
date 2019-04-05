@@ -1,6 +1,6 @@
 ![DIF Logo](https://raw.githubusercontent.com/decentralized-identity/decentralized-identity.github.io/master/images/logo-small.png)
 
-# Universal Resolver Driver: did:fct
+# Universal Resolver Driver: did:factom
 
 This is a [Universal Resolver](https://github.com/decentralized-identity/universal-resolver/) driver for **did:fct** identifiers.
 
