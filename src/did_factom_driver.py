@@ -88,7 +88,7 @@ def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict
     did = '{}{}{}'.format(consts.DID_PREFIX, network_identifier, chain_id)
     key_count = len(active_keys)
     public_keys = [None] * key_count
-    for key in active_keys.values():
+    for key in metadata['all_keys'].values():
         key['id'] = '{}#key-{}'.format(did, key['priority'])
         key['type'] = consts.PUBLIC_KEY_TYPE
         key['controller'] = did
