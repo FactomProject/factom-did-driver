@@ -91,6 +91,7 @@ def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict
     for key in active_keys.values():
         key['id'] = '{}#key-{}'.format(did, key['priority'])
         key['type'] = consts.PUBLIC_KEY_TYPE
+        key['controller'] = did
         public_keys[key['priority']] = key
 
     did_document = {
@@ -98,10 +99,7 @@ def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict
         'id': did,
         'service': [],
         'publicKey': public_keys,
-        'authentication': {
-            'type': consts.AUTHENTICATION_TYPE,
-            'publicKey': ['{}#key-{}'.format(did, key_count - 1)]
-        }
+        'authentication': ['{}#key-{}'.format(did, key_count - 1)]
     }
     return {'didDocument': did_document, 'methodMetadata': metadata}
 
