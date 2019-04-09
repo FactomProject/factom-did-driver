@@ -26,7 +26,7 @@ factom-chain-id = 64*HEXDIG
 
 The factom-chain-id is case-insensitive.
 
-This specification currently only supports Ethereum "mainnet" and "testnet", but can be extended to support any number of public or private Factom networks.
+This specification currently only supports Factom "mainnet" and "testnet", but can be extended to support any number of public or private Factom networks.
 
 Example `factom` DIDs:
 * `did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758`
