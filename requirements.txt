@@ -1,3 +1,5 @@
 bottle
+factom-harmony-connect
 harmony-connect-client
 python-identitykeys
+requests

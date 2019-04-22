@@ -20,11 +20,17 @@ COPY . .
 RUN pip3 install -r requirements.txt
 RUN pip3 install git+https://github.com/sambarnes/factom-api.git
 
-ENV uniresolver_driver_did_factom_factomConnection=harmony_connect
-ENV uniresolver_driver_did_factom_rpcUrlMainnet=https://api.factomd.net
-ENV uniresolver_driver_did_factom_rpcUrlTestnet=https://localhost:8088
-ENV uniresolver_driver_did_factom_harmonyConnectApi=https://api.factom.com/v1
+# possible environment variables
+#ENV uniresolver_driver_did_factom_factomConnection=factomd
+#ENV uniresolver_driver_did_factom_rpcUrlMainnet=https://api.factomd.net
+#ENV uniresolver_driver_did_factom_rpcUrlTestnet=https://dev.factomd.net
+#ENV uniresolver_driver_did_factom_tfaExplorerApiUrlMainnet=https://explorer.factoid.org/api/v1
+#ENV uniresolver_driver_did_factom_tfaExplorerApiUrlTestnet=https://testnet.factoid.org/api/v1
+#ENV uniresolver_driver_did_factom_harmonyApiUrl=https://api.factom.com/v1
+#ENV uniresolver_driver_did_factom_harmonyApiAppId=APP_ID
+#ENV uniresolver_driver_did_factom_harmonyApiAppKey=APP_KEY
+#ENV uniresolver_driver_did_factom_harmonyApiCachingEnabled=false
 
 EXPOSE 8080
 
-CMD cd src && gunicorn -b :8080 did_factom_driver:app
+CMD gunicorn -b :8080 did_factom_driver:app
