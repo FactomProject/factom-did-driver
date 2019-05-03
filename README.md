@@ -26,7 +26,7 @@ curl -X GET http://localhost:8080/1.0/identifiers/did:factom:f26e1c422c657521861
 ## Build and Run (python)
 
 1. First, get the driver's dependencies `pip3 install -r requirements.txt`
-1. Then, run the driver `python3 did_fct_driver.py`
+1. Then, run the driver `python3 did_factom_driver.py`
 1. The driver will now be accessible to curl at `localhost:8080`
 
 ## Driver Environment Variables
