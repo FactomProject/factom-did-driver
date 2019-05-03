@@ -1,13 +1,13 @@
 import bottle
-import consts
-import factomd_jsonrpc_parser
-import harmony_connect_parser
-import tfa_explorer_parser
 import json
 from bottle import error, get, hook, request, run
-from config import DriverConfig
 from harmony_connect_client.rest import ApiException
-from validation import IdentityNotFoundException
+from src import consts
+from src import factomd_jsonrpc_connection
+from src import harmony_connect_connection
+from src import tfa_explorer_connection
+from src.config import DriverConfig
+from src.models import IdentityNotFoundException
 
 
 driver_config = DriverConfig()
@@ -26,14 +26,15 @@ def health_check():
 
 @get('/1.0/identifiers/did\:factom\:<chain_id:re:[0-9A-Fa-f]{64}>')
 def resolve(chain_id):
-    metadata, active_keys = None, None
+    did = '{}{}'.format(consts.DID_PREFIX, chain_id)
+    identity = None
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
-            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+            identity = factomd_jsonrpc_connection.get_identity(driver_config, did, chain_id)
         elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
-            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id)
+            identity = tfa_explorer_connection.get_identity(driver_config, did, chain_id)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
-            metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
+            identity = harmony_connect_connection.get_identity(driver_config, did, chain_id)
         else:
             bottle.abort(500)  # Invalid connection type. This should never be executed.
     except IdentityNotFoundException:
@@ -41,19 +42,20 @@ def resolve(chain_id):
     except ApiException:
         bottle.abort(500)  # Failed to make API call for some reason
 
-    return construct_resolution_result(chain_id, active_keys, metadata)
+    return {'didDocument': identity.get_did_document(), 'methodMetadata': identity.get_method_metadata()}
 
 
 @get('/1.0/identifiers/did\:factom\:mainnet\:<chain_id:re:[0-9A-Fa-f]{64}>')
 def resolve_mainnet(chain_id):
-    metadata, active_keys = None, None
+    did = '{}{}{}'.format(consts.DID_PREFIX, consts.NETWORK_MAINNET, chain_id)
+    identity = None
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
-            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id)
+            identity = factomd_jsonrpc_connection.get_identity(driver_config, did, chain_id)
         elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
-            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id)
+            identity = tfa_explorer_connection.get_identity(driver_config, did, chain_id)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
-            metadata, active_keys = harmony_connect_parser.get_keys(driver_config, chain_id)
+            identity = harmony_connect_connection.get_identity(driver_config, did, chain_id)
         else:
             bottle.abort(500)  # Invalid connection type. This should never be executed.
     except IdentityNotFoundException:
@@ -61,19 +63,22 @@ def resolve_mainnet(chain_id):
     except ApiException:
         bottle.abort(500)  # Failed to make API call for some reason
 
-    return construct_resolution_result(chain_id, active_keys, metadata, network_identifier=consts.NETWORK_MAINNET)
+    return {'didDocument': identity.get_did_document(), 'methodMetadata': identity.get_method_metadata()}
 
 
 @get('/1.0/identifiers/did\:factom\:testnet\:<chain_id:re:[0-9A-Fa-f]{64}>')
 def resolve_testnet(chain_id):
-    metadata, active_keys = None, None
+    did = '{}{}{}'.format(consts.DID_PREFIX, consts.NETWORK_TESTNET, chain_id)
+    identity = None
     try:
         if driver_config.factom_connection == DriverConfig.FACTOMD:
-            metadata, active_keys = factomd_jsonrpc_parser.get_keys(driver_config, chain_id, testnet=True)
+            identity = factomd_jsonrpc_connection.get_identity(driver_config, did, chain_id, testnet=True)
         elif driver_config.factom_connection == DriverConfig.TFA_EXPLORER:
-            metadata, active_keys = tfa_explorer_parser.get_keys(driver_config, chain_id, testnet=True)
+            identity = tfa_explorer_connection.get_identity(driver_config, did, chain_id, testnet=True)
         elif driver_config.factom_connection == DriverConfig.HARMONY:
-            bottle.abort(422)  # Connection type does not support testnet
+            # TODO: switch this to use the Harmony connection if Harmony ever spins up a community testnet environment
+            # For now, fall back to using a factomd connection
+            identity = factomd_jsonrpc_connection.get_identity(driver_config, did, chain_id, testnet=True)
         else:
             bottle.abort(500)  # Invalid connection type. This should never be executed.
     except IdentityNotFoundException:
@@ -81,33 +86,7 @@ def resolve_testnet(chain_id):
     except ApiException:
         bottle.abort(500)  # Failed to make API call for some reason
 
-    return construct_resolution_result(chain_id, active_keys, metadata, network_identifier=consts.NETWORK_TESTNET)
-
-
-def construct_resolution_result(chain_id: str, active_keys: dict, metadata: dict, network_identifier=''):
-    did = '{}{}{}'.format(consts.DID_PREFIX, network_identifier, chain_id)
-    key_count = len(active_keys)
-    public_keys = [None] * key_count
-    for key in metadata['all_keys'].values():
-        key['id'] = '{}#key-{}'.format(did, key['priority'])
-        key['type'] = consts.PUBLIC_KEY_TYPE
-        key['controller'] = did
-        public_keys[key['priority']] = key
-
-    did_document = {
-        '@context': consts.DID_CONTEXT,
-        'id': did,
-        'service': [],
-        'publicKey': public_keys,
-        'authentication': ['{}#key-{}'.format(did, key_count - 1)]
-    }
-    return {'didDocument': did_document, 'methodMetadata': metadata}
-
-
-@error(400)
-def error400(e):
-    body = {'errors': {'detail': 'Bad request'}}
-    return json.dumps(body, separators=(',', ':'))
+    return {'didDocument': identity.get_did_document(), 'methodMetadata': identity.get_method_metadata()}
 
 
 @error(404)
@@ -119,12 +98,6 @@ def error404(e):
 @error(405)
 def error405(e):
     body = {'errors': {'detail': 'Method not allowed'}}
-    return json.dumps(body, separators=(',', ':'))
-
-
-@error(422)
-def error422(e):
-    body = {'errors': {'detail': 'Unprocessable entity'}}
     return json.dumps(body, separators=(',', ':'))
 
 

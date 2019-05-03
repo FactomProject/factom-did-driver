@@ -12,7 +12,7 @@ This is a [Universal Resolver](https://github.com/decentralized-identity/univers
 ## Example DIDs
 
 ```
-did:factom:91e41255a4255f7034caaf11549d5b085be174ebb059462baa35d1e3dac88c15
+did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758
 ```
 
 ## Build and Run (Docker)
@@ -34,7 +34,7 @@ curl -X GET http://localhost:8080/1.0/identifiers/did:factom:f26e1c422c657521861
 The driver recognizes the following environment variables:
 
 ### `uniresolver_driver_did_factom_factomConnection`
-* Specifies the type of connection used to interact with the Factom blockchain:`factomd` or `harmony`. (Note: the `harmony` connection type only supports resolution of mainnet DIDs at this time)
+* Specifies the type of connection used to interact with the Factom blockchain:`factomd` or `harmony`. (Note: the `harmony` connection type only supports resolution of mainnet DIDs, and will fallback to the `factomd` connection)
 * Default value: `factomd`
  
 ### `uniresolver_driver_did_factom_rpcUrlMainnet`
@@ -60,21 +60,26 @@ The driver recognizes the following environment variables:
 
 ### `uniresolver_driver_did_factom_harmonyApiAppId`
 * Specifies the `app_id` to be sent in request headers to the Factom Harmony Connect API
-* Default value: ``
+* Default value: N/A
 
 ### `uniresolver_driver_did_factom_harmonyApiAppKey`
 * Specifies the `app_key` to be sent in request headers to the Factom Harmony Connect API
-* Default value: ``
+* Default value: N/A
+
+### `uniresolver_driver_did_factom_harmonyApiCachingEnabled`
+* Specifies whether or not to use cached results (`true` or `false`)
+* Default value: `false`
 
  
 ## Driver Metadata
 
 The driver returns the following metadata in addition to a DID document:
 
+* `version`: The version of this Factom identity (currently `1`)
 * `name`: The array of partial names that the identity was initialized with.
 * `stage`: The current state of the DID on the blockchain, could be any of the following:
     * `pending`: The identity chain has been submitted for creation, and is waiting to be included in a Directory Block
     * `factom`: The identity chain has been created and included in a Directory Block (i.e. confirmed)
     * `anchored`: The identity chain has been created and confirmed, and the directory block that it was included in has been anchored to Bitcoin and/or Ethereum
 * `createdHeight`: The Directory Block height that the identity chain was created at (null if `stage` is `pending`)
-* `createdTime`: The time of the identity's creation (null if `stage` is `pending`)
+* `publicKeyHistory`: All public keys ever active for this identity, along with information about it's window of activation

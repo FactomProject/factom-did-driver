@@ -85,7 +85,6 @@ Example `factom` DIDs:
   "methodMetadata": {
     "version": 1,
     "createdHeight": 186882,
-    "createdTime": "2019-04-05T05:01:00Z",
     "name": [
       "Test",
       "v1"
@@ -95,51 +94,41 @@ Example `factom` DIDs:
       {
         "type": "Ed25519VerificationKey2018",
         "activatedHeight": 186882,
-        "retiredTime": null,
         "id": "did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758#key-0",
         "entryHash": "e2cad7c5898ad2508689267bd86a61408a091d48ac5631452d153db8c72ee8ac",
         "retiredHeight": null,
-        "activatedTime": "2019-04-05T05:01:00Z",
         "publicKeyHex": "26d921a49a81d661ba5068c800cc59101725a8562873862cbdf2e90047cc645d",
         "priority": 0
       },
       {
         "type": "Ed25519VerificationKey2018",
         "activatedHeight": 186882,
-        "retiredTime": null,
         "id": "did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758#key-1",
         "entryHash": "e2cad7c5898ad2508689267bd86a61408a091d48ac5631452d153db8c72ee8ac",
         "retiredHeight": null,
-        "activatedTime": "2019-04-05T05:01:00Z",
         "publicKeyHex": "4df876bf7cf71f00d350edfd121d3e2734a56cd359b71e2c23d00a8a85ae9979",
         "priority": 1
       },
       {
         "activatedHeight": 186882,
-        "retiredTime": "2019-04-05T05:11:00Z",
         "entryHash": "e2cad7c5898ad2508689267bd86a61408a091d48ac5631452d153db8c72ee8ac",
         "retiredHeight": 186883,
-        "activatedTime": "2019-04-05T05:01:00Z",
         "publicKeyHex": "8ff6c30d9ad24512933ca96220411b117f0a15e932b88be3931164622e583abd",
         "priority": 2
       },
       {
         "activatedHeight": 186883,
-        "retiredTime": "2019-04-05T05:21:00Z",
         "entryHash": "908955fefb66741a392eb8ed701554126780c2ee70f77e48487da14821d85159",
         "retiredHeight": 186884,
-        "activatedTime": "2019-04-05T05:11:00Z",
         "publicKeyHex": "cf459062261dfa3386b8db5ddbd691032d5bb8c3b64fb0c795160740ccf6efca",
         "priority": 2
       },
       {
         "type": "Ed25519VerificationKey2018",
         "activatedHeight": 186884,
-        "retiredTime": null,
         "id": "did:factom:f26e1c422c657521861ced450442d0c664702f49480aec67805822edfcfee758#key-2",
         "entryHash": "9b70f0beb52b337289ec67eb3e558cb87682d3cce534891bc1133125e67b3f67",
         "retiredHeight": null,
-        "activatedTime": "2019-04-05T05:21:00Z",
         "publicKeyHex": "de0af63490f461f7d8431c77e60a9e85483f947e3b1f3b55c72679b8d2c1b3fa",
         "priority": 2
       }
@@ -172,8 +161,8 @@ To construct a valid DID document from a `factom` DID, the following steps are p
 	* The signature MUST be able to be verified with the signer key and the message `<chain-id> + <old-key-string> + <new-key-string>` where each of the strings are concatenated together
 	* If the above are all true, the new key replaces the old key at the same priority level and is now part of the active set of keys.
 * Once all entry blocks for the identity's chain have been parsed in their entirety, the resulting set of keys are considered currently active for the DID
-* For each currently active key, add a `publicKey` element of type `ED25519SignatureVerification` to the DID
-* For the lowest priority key (i.e. the last one in the active keys array), add an `authentication` element of type `ED25519SigningAuthenticationThreshold`, referencing the public key
+* For each currently active key, add a `publicKey` element of type `Ed25519VerificationKey2018` to the DID
+* For the lowest priority key (i.e. the last one in the active keys array), add an `authentication` element of type `Ed25519SignatureAuthentication2018`, referencing the public key
 
 ## Update
 The DID Document may be updated by creating a new key replacement entry in the DID's chain on Factom. The entry structure and validation rules can be seen in [this section](https://github.com/FactomProject/FactomDocs/blob/master/ApplicationIdentity.md#identity-key-replacement)[2] of the Factom Project's identity specification. A key replacement entry that resides outside of the identity's chain will not be taken into consideration when determining which keys were valid at a given block height.
